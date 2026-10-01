@@ -1,0 +1,30 @@
+{
+  "name": "sub-prices",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.34.3",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1 --port 5176",
+    "build": "vue-tsc -b && vite build && node scripts/build-server.mjs",
+    "preview": "vite preview --host 127.0.0.1 --port 4176",
+    "start": "node build/server.cjs",
+    "test": "node --test server/*.test.mjs"
+  },
+  "dependencies": {
+    "lucide-vue-next": "^0.563.0",
+    "sirv": "^3.0.2",
+    "vue": "^3.5.24"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.2.4",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "@vue/tsconfig": "^0.8.1",
+    "esbuild": "^0.28.2",
+    "https-proxy-agent": "^9.1.0",
+    "tailwindcss": "^4.2.4",
+    "typescript": "~5.9.3",
+    "vite": "^7.2.4",
+    "vue-tsc": "^3.1.4"
+  }
+}
