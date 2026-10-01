@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { AlertCircle, ArrowDown, ArrowUp, Moon, RefreshCw, SlidersHorizontal, Sun, TrendingDown, X } from 'lucide-vue-next'
+import { AlertCircle, ArrowDown, ArrowUp, Github, Moon, RefreshCw, SlidersHorizontal, Sun, TrendingDown, X } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { convertToDisplayCurrency, loadExchangeRates, type ExchangeRates } from './services/exchange'
 import { clearPricingCache, loadPricing } from './services/pricing'
@@ -226,27 +226,13 @@ async function clearClaudeProxy() {
 <template>
   <div class="min-h-dvh bg-stone-50 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-50">
     <header class="sticky top-0 z-20 border-b border-zinc-200 bg-stone-50/90 backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-950/90">
-      <div class="mx-auto flex min-h-14 max-w-7xl flex-col gap-2 px-4 py-2 sm:h-14 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:px-6 sm:py-0">
+      <div class="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-4 px-4 py-2 sm:px-6">
         <div class="flex min-w-0 items-baseline gap-3">
           <h1 class="truncate text-sm font-semibold tracking-normal text-zinc-900 dark:text-zinc-50">Sub Prices</h1>
           <p class="hidden truncate text-xs text-zinc-400 dark:text-zinc-500 sm:block">AI 订阅价格对比</p>
         </div>
 
-        <div class="flex min-w-0 items-center gap-1.5 overflow-x-auto">
-          <button
-            v-for="item in providers"
-            :key="item.key"
-            class="h-8 rounded-md px-2.5 text-sm font-medium transition"
-            :class="
-              providerKey === item.key
-                ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-950'
-                : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
-            "
-            @click="providerKey = item.key"
-          >
-            {{ item.label }}
-          </button>
-
+        <div class="flex shrink-0 items-center gap-1.5">
           <button class="icon-button" :aria-label="isDark ? '切换到浅色模式' : '切换到深色模式'" @click="toggleTheme">
             <Sun v-if="isDark" :size="17" />
             <Moon v-else :size="17" />
@@ -255,6 +241,17 @@ async function clearClaudeProxy() {
           <button class="icon-button" aria-label="刷新价格" :disabled="isLoading" @click="reloadPricing(true)">
             <RefreshCw :size="17" :class="{ 'animate-spin': isLoading }" />
           </button>
+
+          <a
+            class="icon-button"
+            href="https://github.com/easy-sub/sub-prices"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="GitHub 项目仓库"
+            title="GitHub 项目仓库"
+          >
+            <Github :size="17" />
+          </a>
         </div>
       </div>
     </header>
@@ -262,20 +259,33 @@ async function clearClaudeProxy() {
     <main class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-5 sm:px-6">
       <section class="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-end">
         <div class="flex flex-col gap-3">
-          <div class="flex gap-1 overflow-x-auto pb-1">
-            <button
-              v-for="plan in provider.plans"
-              :key="plan.key"
-              class="h-8 shrink-0 rounded-lg px-3 text-sm font-medium transition"
-              :class="
-                activePlan === plan.key
-                  ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-950'
-                  : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
-              "
-              @click="activePlan = plan.key"
-            >
-              {{ plan.label }}
-            </button>
+          <div class="flex min-w-0 items-center gap-2">
+            <div class="segmented shrink-0" aria-label="价格服务">
+              <button
+                v-for="item in providers"
+                :key="item.key"
+                :class="{ active: providerKey === item.key }"
+                @click="providerKey = item.key"
+              >
+                {{ item.label }}
+              </button>
+            </div>
+            <span class="h-5 w-px shrink-0 bg-zinc-200 dark:bg-zinc-700" aria-hidden="true"></span>
+            <div class="flex min-w-0 gap-1 overflow-x-auto pb-1">
+              <button
+                v-for="plan in provider.plans"
+                :key="plan.key"
+                class="h-8 shrink-0 rounded-lg px-3 text-sm font-medium transition"
+                :class="
+                  activePlan === plan.key
+                    ? 'bg-zinc-900 text-white dark:bg-zinc-50 dark:text-zinc-950'
+                    : 'text-zinc-500 hover:bg-zinc-100 hover:text-zinc-900 dark:text-zinc-400 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
+                "
+                @click="activePlan = plan.key"
+              >
+                {{ plan.label }}
+              </button>
+            </div>
           </div>
 
         </div>
