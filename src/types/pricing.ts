@@ -1,12 +1,19 @@
-export type ProviderKey = 'openai' | 'claude'
+export type ProviderKey = 'openai' | 'claude' | 'grok'
 export type BillingInterval = 'month' | 'year'
 
 export type TaxMode = 'inclusive' | 'exclusive'
+
+export interface Promotion {
+  amount: number
+  durationPeriods: number
+  expiresAt: string
+}
 
 export interface IntervalPrice {
   amount: number
   tax?: TaxMode
   taxPercent?: number
+  promotion?: Promotion
   psp_override?: {
     amount: number
     tax?: TaxMode
@@ -44,6 +51,8 @@ export interface PriceRow {
   currencyCode: string
   currencySymbol: string
   originalAmount: number | null
+  regularAmount: number | null
+  promotion?: Promotion
   convertedAmount: number | null
   taxPercent: number | null
   taxIncluded: boolean

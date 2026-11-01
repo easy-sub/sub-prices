@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { AlertCircle, ArrowDown, ArrowUp, Github, Moon, RefreshCw, SlidersHorizontal, Sun, TrendingDown, X } from 'lucide-vue-next'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { convertToDisplayCurrency, loadExchangeRates, type ExchangeRates } from './services/exchange'
 import { clearPricingCache, loadPricing } from './services/pricing'
-import { getProvider, providers } from './services/providers'
+import { getPromotion, getProvider, providers } from './services/providers'
 import type { BillingInterval, PriceRow, PricingConfig, ProviderKey } from './types/pricing'
 import { countryFlag, formatMoney, getCountryName } from './utils/format'
 
@@ -34,13 +34,18 @@ const exchangeLoading = ref(false)
 const isDark = ref(false)
 const claudeProxyUrl = ref('')
 const showClaudeProxyModal = ref(false)
+const usePromotionalPrice = ref(true)
+const now = ref(Date.now())
+let promotionTimer: ReturnType<typeof setInterval> | undefined
 let pricingRequestId = 0
 
 const provider = computed(() => getProvider(providerKey.value))
 const rows = computed<PriceRow[]>(() => {
   const mapped = Array.from(configs.value.entries()).map(([countryCode, config]) => {
     const currencyCode = config.currency_config.symbol_code
-    const originalAmount = provider.value.getPrice(config, activePlan.value, billingInterval.value)
+    const regularAmount = provider.value.getPrice(config, activePlan.value, billingInterval.value)
+    const promotion = providerKey.value === 'grok' ? getPromotion(config, activePlan.value, billingInterval.value, now.value) : undefined
+    const originalAmount = usePromotionalPrice.value && promotion ? promotion.amount : regularAmount
     const convertedAmount =
       originalAmount === null ? null : convertToDisplayCurrency(originalAmount, currencyCode, exchangeRates.value)
     const taxPercent = provider.value.getTaxPercent(config, activePlan.value, billingInterval.value)
@@ -54,6 +59,8 @@ const rows = computed<PriceRow[]>(() => {
       currencyCode,
       currencySymbol: config.currency_config.symbol,
       originalAmount,
+      regularAmount,
+      promotion,
       convertedAmount,
       taxPercent,
       taxIncluded
@@ -119,6 +126,7 @@ const selectedCurrencyFlag = computed(() => {
 })
 
 onMounted(async () => {
+  promotionTimer = setInterval(() => { now.value = Date.now() }, 30_000)
   claudeProxyUrl.value = window.localStorage.getItem('sub-prices:claude-proxy') ?? ''
   const storedTheme = window.localStorage.getItem('sub-prices:theme')
   isDark.value = storedTheme === 'dark'
@@ -126,8 +134,10 @@ onMounted(async () => {
   await Promise.all([reloadPricing(false), reloadExchangeRates()])
 })
 
+onUnmounted(() => clearInterval(promotionTimer))
+
 watch(providerKey, async () => {
-  activePlan.value = provider.value.plans.find((plan) => plan.key === 'pro')?.key ?? provider.value.plans[0]?.key ?? ''
+  activePlan.value = provider.value.plans.find((plan) => plan.key === (providerKey.value === 'grok' ? 'premium' : 'pro'))?.key ?? provider.value.plans[0]?.key ?? ''
   await reloadPricing(false)
 })
 
@@ -206,6 +216,17 @@ function formatConverted(row: PriceRow) {
     return '暂无汇率'
   }
   return formatMoney(row.convertedAmount, displayCurrency.value)
+}
+
+function promotionDuration(periods: number) {
+  if (billingInterval.value === 'year') return periods === 1 ? '首年优惠' : `前 ${periods} 年优惠`
+  return periods === 1 ? '首月优惠' : `前 ${periods} 个月优惠`
+}
+
+function formatPromotionDeadline(expiresAt: string) {
+  return new Intl.DateTimeFormat('zh-CN', {
+    month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', timeZoneName: 'short'
+  }).format(new Date(expiresAt))
 }
 
 async function applyClaudeProxy() {
@@ -291,6 +312,10 @@ async function clearClaudeProxy() {
         </div>
 
         <div class="flex flex-wrap items-center gap-2">
+          <label v-if="providerKey === 'grok'" class="inline-flex items-center gap-1.5 text-xs text-zinc-600 dark:text-zinc-300">
+            <input v-model="usePromotionalPrice" type="checkbox" class="accent-emerald-600" />
+            按优惠价比较
+          </label>
           <button
             v-if="providerKey === 'claude'"
             class="proxy-config-button"
@@ -317,6 +342,12 @@ async function clearClaudeProxy() {
           </label>
         </div>
       </section>
+
+      <p v-if="providerKey === 'grok'" class="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+        {{ billingInterval === 'year' ? '年付价格按月折算。' : '月付价格按每月展示。' }}
+        {{ usePromotionalPrice ? '按有效优惠首期价格排名，无优惠时使用原价。' : '按正常续费价格排名。' }}
+        各地区优惠期数可能不同；优惠资格及最终税费以结算页为准。
+      </p>
 
       <section class="grid gap-4 lg:grid-cols-[1fr_18rem] lg:items-start">
         <div class="overflow-hidden rounded-lg border border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900">
@@ -383,10 +414,20 @@ async function clearClaudeProxy() {
                     <span class="inline-flex flex-wrap items-center gap-1.5">
                       <span class="font-mono">{{ formatOriginal(row) }}</span>
                       <span v-if="row.taxIncluded" class="rounded bg-amber-50 px-1.5 py-0.5 text-[11px] font-medium text-amber-700 dark:bg-amber-400/10 dark:text-amber-300">含税</span>
+                      <span v-else-if="providerKey === 'grok' && row.originalAmount !== null" class="text-[11px] text-zinc-400">未含税</span>
                     </span>
+                    <div v-if="row.promotion" class="mt-1 text-xs text-zinc-500 dark:text-zinc-400">
+                      <span v-if="usePromotionalPrice" class="line-through">{{ formatMoney(row.regularAmount!, row.currencyCode) }}</span>
+                      <span v-else>{{ promotionDuration(row.promotion.durationPeriods) }} {{ formatMoney(row.promotion.amount, row.currencyCode) }}</span>
+                      <span v-if="usePromotionalPrice"> · {{ promotionDuration(row.promotion.durationPeriods) }}</span>
+                    </div>
                   </td>
                   <td class="px-4 py-3 font-mono font-semibold">{{ formatConverted(row) }}</td>
                   <td class="px-4 py-3">
+                    <div v-if="row.promotion" class="mb-1 text-xs leading-relaxed text-emerald-700 dark:text-emerald-300">
+                      {{ promotionDuration(row.promotion.durationPeriods) }}，之后恢复原价<br />
+                      {{ formatPromotionDeadline(row.promotion.expiresAt) }} 截止
+                    </div>
                     <div class="flex flex-wrap items-center gap-1.5">
                       <span
                         v-if="lowestRow?.countryCode === row.countryCode"
@@ -425,7 +466,7 @@ async function clearClaudeProxy() {
                 class="mt-2 inline-flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-300"
               >
                 <TrendingDown :size="14" />
-                比美国原价低 {{ savingsPercent }}%
+                比美国{{ providerKey === 'grok' && usePromotionalPrice ? '同口径价格' : '原价' }}低 {{ savingsPercent }}%
               </p>
             </template>
             <p v-else class="text-sm text-zinc-500">{{ failedCountries.length ? '国家价格数据不完整' : '暂无可比价格' }}</p>

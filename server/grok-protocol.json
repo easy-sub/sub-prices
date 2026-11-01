@@ -1,0 +1,66 @@
+{
+  "messages": {
+    "Discount": {
+      "1": ["percent", "double", false],
+      "2": ["fixed_amount", "Money", false],
+      "3": ["times", "int", false]
+    },
+    "BenefitValue": {
+      "1": ["discount", "Discount", false]
+    },
+    "PricingDetails": {
+      "1": ["amount", "Money", false],
+      "2": ["interval", "Interval", false],
+      "3": ["country", "string", false],
+      "4": ["billing_platform", "BillingPlatform", false],
+      "5": ["tax_behavior", "TaxBehavior", false]
+    },
+    "Pricing": {
+      "1": ["id", "string", false],
+      "2": ["sku_id", "string", false],
+      "3": ["details", "PricingDetails", false],
+      "4": ["status", "PricingStatus", false]
+    },
+    "MultiGetSkuPricingsResponse": {
+      "1": ["sku_pricings", "SkuPricing", true],
+      "4": ["error", "ErrorDetail", false]
+    },
+    "AppliedBenefit": {
+      "1": ["benefit_id", "string", false],
+      "2": ["benefit_name", "string", false],
+      "3": ["value", "BenefitValue", false],
+      "4": ["redeem_by", "Timestamp", false],
+      "5": ["first_cycle_amount", "Money", false]
+    },
+    "SkuPricing": {
+      "1": ["sku_id", "string", false],
+      "4": ["pricing", "Pricing", false],
+      "5": ["benefits", "AppliedBenefit", true],
+      "8": ["display_only", "bool", false],
+      "9": ["sku_name", "string", false]
+    },
+    "Money": {
+      "1": ["currency_code", "string", false],
+      "2": ["unit_micros", "int", false]
+    },
+    "Interval": {
+      "1": ["count", "int", false],
+      "2": ["unit", "Unit", false]
+    },
+    "ErrorDetail": {
+      "1": ["code", "string", false],
+      "2": ["message", "string", false]
+    },
+    "Timestamp": {
+      "1": ["seconds", "int", false],
+      "2": ["nanos", "int", false]
+    }
+  },
+  "enums": {
+    "BillingPlatform": {"0": "BILLING_PLATFORM_UNSPECIFIED", "1": "BILLING_PLATFORM_STRIPE", "2": "BILLING_PLATFORM_GOOGLE_PLAY", "3": "BILLING_PLATFORM_APPLE", "4": "BILLING_PLATFORM_PAYPAL", "5": "BILLING_PLATFORM_STRIPE_LEGACY", "6": "BILLING_PLATFORM_APPLE_IAP", "7": "BILLING_PLATFORM_ADHOC", "8": "BILLING_PLATFORM_ENTERPRISE", "9": "BILLING_PLATFORM_X_MONEY"},
+    "TaxBehavior": {"0": "TAX_BEHAVIOR_UNSPECIFIED", "1": "TAX_BEHAVIOR_INCLUSIVE", "2": "TAX_BEHAVIOR_EXCLUSIVE"},
+    "PricingStatus": {"0": "PRICING_STATUS_UNSPECIFIED", "1": "PRICING_STATUS_DRAFT", "2": "PRICING_STATUS_ACTIVE", "3": "PRICING_STATUS_RETIRED"},
+    "Unit": {"0": "UNIT_UNSPECIFIED", "1": "UNIT_DAY", "2": "UNIT_MONTH", "3": "UNIT_YEAR", "4": "UNIT_WEEK", "5": "UNIT_MINUTE"}
+  },
+  "productTypeXpass": 6
+}

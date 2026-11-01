@@ -61,10 +61,37 @@ const claudeProvider: ProviderAdapter = {
   }
 }
 
+const grokProvider: ProviderAdapter = {
+  key: 'grok',
+  label: 'Grok',
+  plans: [
+    { key: 'plus', label: 'Plus' },
+    { key: 'premium', label: 'Premium' },
+    { key: 'super', label: 'Super' },
+    { key: 'ultra', label: 'Ultra' }
+  ],
+  getPrice(config, planKey, interval) {
+    return getIntervalPrice(config.currency_config, planKey, interval)?.amount ?? null
+  },
+  getTaxPercent() {
+    return null
+  },
+  isTaxIncluded(config, planKey, interval) {
+    return getIntervalPrice(config.currency_config, planKey, interval)?.tax === 'inclusive'
+  }
+}
+
 export const providers: ProviderAdapter[] = [
   openAIProvider,
-  claudeProvider
+  claudeProvider,
+  grokProvider
 ]
+
+export function getPromotion(config: PricingConfig, planKey: string, interval: BillingInterval, now = Date.now()) {
+  const price = getIntervalPrice(config.currency_config, planKey, interval)
+  const promotion = price?.promotion
+  return promotion && promotion.amount < price.amount && Date.parse(promotion.expiresAt) > now ? promotion : undefined
+}
 
 export function getProvider(key: ProviderKey): ProviderAdapter {
   return providers.find((provider) => provider.key === key) ?? openAIProvider

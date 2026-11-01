@@ -1,12 +1,15 @@
 # Sub Prices
 
-Sub Prices 可以对比不同地区的 AI 订阅价格，支持 OpenAI、Claude、账期切换和货币换算。首次打开使用白天模式，也可以在页面右上角切换主题。
+Sub Prices 可以对比不同地区的 AI 订阅价格，支持 OpenAI、Claude、Grok、账期切换和货币换算。首次打开使用白天模式，也可以在页面右上角切换主题。
+
+Grok 支持 Plus、Premium、Super、Ultra，免登录查询 43 个国家/地区的价格目录。页面默认按有效优惠首期价格比较，可取消「按优惠价比较」切换为正常续费价格，并展示优惠期数、截止时间和含税标识。年付价格按月折算；各地区优惠期数可能不同，具体账号的优惠资格与最终税费以结算页为准。优惠金额和到期时间来自实时目录，过期优惠不参与比较。
 
 ## 部署前准备
 
 - 一台能访问 GitHub、并安装了 Node.js 20 或更新版本的服务器；Docker 部署只需安装 Docker。
 - 一个已解析到服务器的域名。使用宝塔或 1Panel 时，先给域名申请 HTTPS 证书。
 - Claude 价格查询需要服务器能访问 Claude。若服务器无法直连，可在网页的 Claude 代理设置中填写**服务器能访问的 HTTP 或 HTTPS 代理地址**。
+- Grok 价格查询需要服务器能访问 `grok.com`；服务端通过 gRPC-Web 调用 `MultiGetSkuPricings`，不需要配置账号或登录 Cookie。
 
 ## 宝塔或 1Panel 部署
 

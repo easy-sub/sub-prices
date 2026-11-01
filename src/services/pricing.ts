@@ -79,7 +79,7 @@ async function fetchCountries(provider: ProviderKey): Promise<string[]> {
     throw new Error('Invalid countries payload')
   }
 
-  return prioritizeCountries(data.countries, ['CL', 'US'])
+  return prioritizeCountries(data.countries, provider === 'grok' ? ['US', 'IN', 'TR'] : ['CL', 'US'])
 }
 
 async function fetchConfigs(
@@ -112,10 +112,10 @@ async function fetchConfigs(
     }))
   }
 
-  await fetchAll(countries, provider === 'claude' ? 5 : 20)
+  await fetchAll(countries, provider === 'openai' ? 20 : 5)
   for (let attempt = 0; attempt < 2 && failedCountries.size > 0; attempt += 1) {
     await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)))
-    await fetchAll([...failedCountries], provider === 'claude' ? 3 : 10)
+    await fetchAll([...failedCountries], provider === 'openai' ? 10 : 3)
   }
 
   return { entries, failedCountries: [...failedCountries] }
